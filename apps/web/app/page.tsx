@@ -16,6 +16,7 @@ import Scene10_CDCStream from '../components/cinematic/Scene10_CDCStream';
 import Scene11_GhostReplay from '../components/cinematic/Scene11_GhostReplay';
 import Scene12_EvaluationBenchmark from '../components/cinematic/Scene12_EvaluationBenchmark';
 import ChamberLiveDemoModal from '../components/cinematic/ChamberLiveDemoModal';
+import JudgeModeExperience from '../components/cinematic/JudgeModeExperience';
 import { getHealth } from '../lib/api';
 import { SystemHealth } from '../types';
 import { NodePoint } from '../lib/3d-math';
@@ -24,6 +25,7 @@ export default function GhostOpsExperience() {
   const [health, setHealth] = useState<SystemHealth | null>(null);
   const [activeChamber, setActiveChamber] = useState<number>(0);
   const [isDemoModalOpen, setIsDemoModalOpen] = useState<boolean>(false);
+  const [isJudgeModeOpen, setIsJudgeModeOpen] = useState<boolean>(false);
   const [selectedNode, setSelectedNode] = useState<NodePoint | null>(null);
 
   // Section references for scroll navigation across all 12 scenes
@@ -95,12 +97,14 @@ export default function GhostOpsExperience() {
         activeChamber={activeChamber}
         onSelectChamber={scrollToScene}
         onOpenDemo={() => setIsDemoModalOpen(true)}
+        onOpenJudgeMode={() => setIsJudgeModeOpen(true)}
       />
 
       {/* Scene 01: Hero / The Hook */}
       <div ref={sceneRefs[0]}>
         <Scene01_Hero
           onOpenDemo={() => setIsDemoModalOpen(true)}
+          onOpenJudgeMode={() => setIsJudgeModeOpen(true)}
           onExploreMemory={() => scrollToScene(2)}
           onExploreBenchmark={() => scrollToScene(11)}
           onSelectNode={(node) => setSelectedNode(node)}
@@ -166,6 +170,13 @@ export default function GhostOpsExperience() {
       <ChamberLiveDemoModal
         isOpen={isDemoModalOpen}
         onClose={() => setIsDemoModalOpen(false)}
+      />
+
+      {/* Dedicated Judge Mode Theatre */}
+      <JudgeModeExperience
+        isOpen={isJudgeModeOpen}
+        onClose={() => setIsJudgeModeOpen(false)}
+        health={health}
       />
 
       {/* Global Research Instrument Footer */}

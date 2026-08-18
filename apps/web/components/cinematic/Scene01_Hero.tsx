@@ -1,18 +1,19 @@
 'use client';
 
 import React, { useState } from 'react';
-import { ArrowRight, Play, Database, Cpu, ShieldCheck, Layers, GitCompare, Sparkles, ChevronDown } from 'lucide-react';
+import { ArrowRight, Play, Database, Cpu, ShieldCheck, Layers, GitCompare, Sparkles } from 'lucide-react';
 import HeroVaultScene from '../3d/scenes/HeroVaultScene';
 import { NodePoint } from '../../lib/3d-math';
 
 interface Scene01HeroProps {
   onOpenDemo: () => void;
+  onOpenJudgeMode: () => void;
   onExploreMemory: () => void;
   onExploreBenchmark: () => void;
   onSelectNode?: (node: NodePoint) => void;
 }
 
-export default function Scene01_Hero({ onOpenDemo, onExploreMemory, onExploreBenchmark, onSelectNode }: Scene01HeroProps) {
+export default function Scene01_Hero({ onOpenDemo, onOpenJudgeMode, onExploreMemory, onExploreBenchmark, onSelectNode }: Scene01HeroProps) {
   const [activeConcept, setActiveConcept] = useState<{ title: string; count: string; desc: string } | null>(null);
 
   const handleNodeSelect = (node: NodePoint) => {
@@ -55,9 +56,9 @@ export default function Scene01_Hero({ onOpenDemo, onExploreMemory, onExploreBen
       <div className="absolute inset-0 grid-bg radial-mask pointer-events-none z-1" />
 
       {/* Hero Content Container */}
-      <div className="relative z-10 max-w-5xl mx-auto text-center flex flex-col items-center mt-4">
+      <div className="relative z-10 max-w-5xl mx-auto text-center flex flex-col items-center mt-4 font-mono">
         {/* Status Badge */}
-        <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-zinc-900/85 border border-emerald-500/40 text-emerald-400 text-xs font-mono mb-6 backdrop-blur-md shadow-lg shadow-emerald-950/40">
+        <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-zinc-900/85 border border-emerald-500/40 text-emerald-400 text-xs mb-6 backdrop-blur-md shadow-lg shadow-emerald-950/40">
           <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
           <span className="font-semibold tracking-wide">OPERATIONAL MEMORY VAULT</span>
           <span className="text-zinc-500">|</span>
@@ -72,8 +73,8 @@ export default function Scene01_Hero({ onOpenDemo, onExploreMemory, onExploreBen
         </h1>
 
         {/* Differentiator Callout Box */}
-        <div className="p-4 sm:p-5 rounded-2xl bg-zinc-950/80 border border-emerald-500/30 backdrop-blur-xl max-w-3xl mb-8 shadow-2xl shadow-emerald-950/30">
-          <p className="text-sm sm:text-base text-zinc-200 leading-relaxed font-mono">
+        <div className="p-4 sm:p-5 rounded-2xl bg-zinc-950/85 border border-emerald-500/30 backdrop-blur-xl max-w-3xl mb-8 shadow-2xl shadow-emerald-950/30 text-left">
+          <p className="text-xs sm:text-sm text-zinc-200 leading-relaxed">
             <span className="text-emerald-400 font-bold block mb-1 uppercase tracking-wider text-xs">
               ⚡ The Core Differentiator:
             </span>
@@ -83,35 +84,47 @@ export default function Scene01_Hero({ onOpenDemo, onExploreMemory, onExploreBen
 
         {/* Action CTAs */}
         <div className="flex flex-wrap items-center justify-center gap-4 mb-10">
+          {/* PRIMARY: Enter Judge Mode */}
           <button
-            onClick={onOpenDemo}
-            className="flex items-center gap-2.5 px-6 py-3 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-zinc-950 font-bold text-sm font-mono transition-all shadow-xl shadow-emerald-500/25 active:scale-95"
+            onClick={onOpenJudgeMode}
+            className="flex items-center gap-2.5 px-6 py-3.5 rounded-xl bg-gradient-to-r from-amber-500 via-emerald-400 to-emerald-500 hover:from-amber-400 hover:to-emerald-300 text-zinc-950 font-extrabold text-sm transition-all shadow-xl shadow-emerald-500/25 active:scale-95 animate-pulse"
           >
-            <Play className="w-4 h-4 fill-current" />
-            <span>INITIATE LIVE INVESTIGATION</span>
+            <Sparkles className="w-4 h-4 fill-current text-zinc-950" />
+            <span>ENTER JUDGE MODE (2-MIN EXPERIENCE)</span>
             <ArrowRight className="w-4 h-4" />
           </button>
 
+          {/* Secondary: Initiate Live Investigation */}
           <button
-            onClick={onExploreMemory}
-            className="flex items-center gap-2 px-5 py-3 rounded-xl bg-zinc-900/85 hover:bg-zinc-800 border border-zinc-700/80 text-zinc-200 text-sm font-mono transition-all backdrop-blur-md"
+            onClick={onOpenDemo}
+            className="flex items-center gap-2 px-5 py-3 rounded-xl bg-zinc-900/90 hover:bg-zinc-800 border border-emerald-500/40 text-emerald-300 text-xs font-bold transition-all backdrop-blur-md"
           >
-            <Database className="w-4 h-4 text-emerald-400" />
-            <span>EXPLORE MEMORY VAULT</span>
+            <Play className="w-3.5 h-3.5 fill-current text-emerald-400" />
+            <span>LIVE INCIDENT DEMO</span>
           </button>
 
+          {/* Tertiary: Explore Memory Vault */}
+          <button
+            onClick={onExploreMemory}
+            className="flex items-center gap-2 px-4 py-3 rounded-xl bg-zinc-900/80 hover:bg-zinc-800 border border-zinc-700 text-zinc-300 text-xs transition-all backdrop-blur-md"
+          >
+            <Database className="w-3.5 h-3.5 text-emerald-400" />
+            <span>MEMORY VAULT</span>
+          </button>
+
+          {/* Quaternary: Regression Benchmark */}
           <button
             onClick={onExploreBenchmark}
-            className="flex items-center gap-2 px-5 py-3 rounded-xl bg-zinc-900/85 hover:bg-zinc-800 border border-zinc-700/80 text-zinc-200 text-sm font-mono transition-all backdrop-blur-md"
+            className="flex items-center gap-2 px-4 py-3 rounded-xl bg-zinc-900/80 hover:bg-zinc-800 border border-zinc-700 text-zinc-300 text-xs transition-all backdrop-blur-md"
           >
-            <ShieldCheck className="w-4 h-4 text-emerald-400" />
-            <span>REGRESSION BENCHMARK</span>
+            <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
+            <span>REGRESSION GATE</span>
           </button>
         </div>
 
         {/* Dynamic Concept Hover Card */}
         {activeConcept && (
-          <div className="mb-8 p-3.5 rounded-xl bg-zinc-900/90 border border-emerald-500/40 text-left max-w-xl animate-fade-in font-mono shadow-xl">
+          <div className="mb-8 p-3.5 rounded-xl bg-zinc-900/90 border border-emerald-500/40 text-left max-w-xl animate-fade-in shadow-xl">
             <div className="flex items-center justify-between text-xs text-emerald-400 font-bold mb-1">
               <span>{activeConcept.title}</span>
               <span className="text-zinc-300 font-semibold">{activeConcept.count}</span>
@@ -123,39 +136,39 @@ export default function Scene01_Hero({ onOpenDemo, onExploreMemory, onExploreBen
         {/* High-Density Operational Counters */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3.5 w-full max-w-4xl">
           <div className="vault-card p-4 rounded-xl text-left border border-zinc-800/80 bg-zinc-950/70">
-            <div className="flex items-center gap-2 text-zinc-400 text-xs font-mono mb-1">
+            <div className="flex items-center gap-2 text-zinc-400 text-xs mb-1">
               <Database className="w-3.5 h-3.5 text-emerald-400" />
               <span>INSTITUTIONAL MEMORY</span>
             </div>
-            <div className="text-2xl font-bold text-zinc-100 font-mono">46 Precedents</div>
-            <div className="text-[11px] text-zinc-400 font-mono mt-0.5">CockroachDB native vector</div>
+            <div className="text-2xl font-bold text-zinc-100">46 Precedents</div>
+            <div className="text-[11px] text-zinc-400 mt-0.5">CockroachDB native vector</div>
           </div>
 
           <div className="vault-card p-4 rounded-xl text-left border border-zinc-800/80 bg-zinc-950/70">
-            <div className="flex items-center gap-2 text-zinc-400 text-xs font-mono mb-1">
+            <div className="flex items-center gap-2 text-zinc-400 text-xs mb-1">
               <Layers className="w-3.5 h-3.5 text-emerald-400" />
               <span>EMBEDDING SPACE</span>
             </div>
-            <div className="text-2xl font-bold text-zinc-100 font-mono">1,536-Dim</div>
-            <div className="text-[11px] text-zinc-400 font-mono mt-0.5">Titan / Bedrock Mantle</div>
+            <div className="text-2xl font-bold text-zinc-100">1,536-Dim</div>
+            <div className="text-[11px] text-zinc-400 mt-0.5">Titan / Bedrock Mantle</div>
           </div>
 
           <div className="vault-card p-4 rounded-xl text-left border border-zinc-800/80 bg-zinc-950/70">
-            <div className="flex items-center gap-2 text-zinc-400 text-xs font-mono mb-1">
+            <div className="flex items-center gap-2 text-zinc-400 text-xs mb-1">
               <GitCompare className="w-3.5 h-3.5 text-emerald-400" />
               <span>TEMPORAL DRIFT</span>
             </div>
-            <div className="text-2xl font-bold text-zinc-100 font-mono">9 Dimensions</div>
-            <div className="text-[11px] text-zinc-400 font-mono mt-0.5">Deterministic diff checks</div>
+            <div className="text-2xl font-bold text-zinc-100">9 Dimensions</div>
+            <div className="text-[11px] text-zinc-400 mt-0.5">Deterministic diff checks</div>
           </div>
 
           <div className="vault-card p-4 rounded-xl text-left border border-zinc-800/80 bg-zinc-950/70">
-            <div className="flex items-center gap-2 text-zinc-400 text-xs font-mono mb-1">
+            <div className="flex items-center gap-2 text-zinc-400 text-xs mb-1">
               <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
               <span>UNSAFE REPLAY RATE</span>
             </div>
-            <div className="text-2xl font-bold text-emerald-400 font-mono">0.00%</div>
-            <div className="text-[11px] text-zinc-400 font-mono mt-0.5">Regression gate: PASSED</div>
+            <div className="text-2xl font-bold text-emerald-400">0.00%</div>
+            <div className="text-[11px] text-zinc-400 mt-0.5">Regression gate: PASSED</div>
           </div>
         </div>
       </div>

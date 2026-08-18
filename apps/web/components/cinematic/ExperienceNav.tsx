@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Shield, Database, Cpu, Activity, Play, Radio, ChevronDown } from 'lucide-react';
+import { Shield, Database, Cpu, Activity, Play, Sparkles, ChevronDown } from 'lucide-react';
 import { SystemHealth } from '../../types';
 
 interface ExperienceNavProps {
@@ -9,6 +9,7 @@ interface ExperienceNavProps {
   activeChamber: number;
   onSelectChamber: (index: number) => void;
   onOpenDemo: () => void;
+  onOpenJudgeMode: () => void;
 }
 
 const CHAPTERS = [
@@ -26,7 +27,7 @@ const CHAPTERS = [
   { id: 11, label: 'BENCHMARK' },
 ];
 
-export default function ExperienceNav({ health, activeChamber, onSelectChamber, onOpenDemo }: ExperienceNavProps) {
+export default function ExperienceNav({ health, activeChamber, onSelectChamber, onOpenDemo, onOpenJudgeMode }: ExperienceNavProps) {
   const [timeStr, setTimeStr] = useState<string>('');
   const [isDropdownOpen, setIsDropdownOpen] = useState<boolean>(false);
 
@@ -91,7 +92,7 @@ export default function ExperienceNav({ health, activeChamber, onSelectChamber, 
             <ChevronDown className="w-3 h-3 text-zinc-400" />
           </button>
           {isDropdownOpen && (
-            <div className="absolute top-full mt-1 right-0 w-48 rounded-xl bg-zinc-950 border border-zinc-800 shadow-2xl p-1.5 z-50 max-h-64 overflow-y-auto">
+            <div className="absolute top-full mt-1 right-0 w-48 rounded-xl bg-zinc-950 border border-zinc-800 shadow-2xl p-1.5 z-50 max-h-64 overflow-y-auto font-mono">
               {CHAPTERS.map((ch) => (
                 <button
                   key={ch.id}
@@ -99,7 +100,7 @@ export default function ExperienceNav({ health, activeChamber, onSelectChamber, 
                     onSelectChamber(ch.id);
                     setIsDropdownOpen(false);
                   }}
-                  className={`w-full text-left px-2.5 py-1 rounded-lg text-[11px] font-mono transition-all ${
+                  className={`w-full text-left px-2.5 py-1 rounded-lg text-[11px] transition-all ${
                     activeChamber === ch.id
                       ? 'bg-emerald-950 text-emerald-300 font-bold'
                       : 'text-zinc-400 hover:bg-zinc-900 hover:text-zinc-200'
@@ -112,7 +113,7 @@ export default function ExperienceNav({ health, activeChamber, onSelectChamber, 
           )}
         </div>
 
-        {/* Real-time System Indicators & Action CTA */}
+        {/* Real-time System Indicators & Action CTAs */}
         <div className="flex items-center gap-2.5">
           {/* CockroachDB Status */}
           <div className="hidden sm:flex items-center gap-1.5 px-2 py-0.5 rounded-lg bg-zinc-900/80 border border-zinc-800 text-[10px] font-mono">
@@ -128,18 +129,21 @@ export default function ExperienceNav({ health, activeChamber, onSelectChamber, 
             <span className="text-emerald-400 font-bold">LIVE</span>
           </div>
 
-          {/* Live System Clock */}
-          <div className="hidden lg:flex items-center gap-1.5 px-2 py-0.5 rounded-lg bg-zinc-900/40 border border-zinc-800/60 text-[10px] font-mono text-zinc-400">
-            <Activity className="w-3 h-3 text-zinc-500" />
-            <span>{timeStr || 'LIVE'}</span>
-          </div>
+          {/* PRIMARY: Dedicated Judge Mode CTA */}
+          <button
+            onClick={onOpenJudgeMode}
+            className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-gradient-to-r from-amber-500 to-emerald-400 hover:from-amber-400 hover:to-emerald-300 text-zinc-950 font-extrabold text-xs font-mono transition-all shadow-lg shadow-amber-500/20 active:scale-95 whitespace-nowrap animate-pulse"
+          >
+            <Sparkles className="w-3.5 h-3.5 fill-current text-zinc-950" />
+            <span>JUDGE MODE (2-MIN)</span>
+          </button>
 
-          {/* Primary CTA */}
+          {/* Demo Replay CTA */}
           <button
             onClick={onOpenDemo}
-            className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-zinc-950 font-bold text-xs font-mono transition-all shadow-md shadow-emerald-500/20 active:scale-95 whitespace-nowrap"
+            className="hidden sm:flex items-center gap-1.5 px-3 py-1 rounded-lg bg-zinc-900 hover:bg-zinc-800 border border-zinc-700 text-zinc-200 font-bold text-xs font-mono transition-all active:scale-95 whitespace-nowrap"
           >
-            <Play className="w-3 h-3 fill-current" />
+            <Play className="w-3 h-3 fill-current text-emerald-400" />
             <span>DEMO REPLAY</span>
           </button>
         </div>
