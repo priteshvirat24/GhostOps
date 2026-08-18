@@ -22,10 +22,13 @@ class Settings(BaseSettings):
     BEDROCK_MOCK_MODE: bool = Field(default=True, description="True for mock embeddings/LLM, False for live AWS Bedrock")
 
     # AWS Credentials
-    AWS_REGION: str = Field(default="us-east-1", description="AWS Target Region")
+    AWS_REGION: str = Field(default="eu-north-1", description="AWS Target Region")
     AWS_ACCESS_KEY_ID: Optional[str] = None
     AWS_SECRET_ACCESS_KEY: Optional[str] = None
-    BEDROCK_MODEL_ID: str = "anthropic.claude-3-5-sonnet-20241022-v2:0"
+    BEDROCK_MODEL_ID: str = "deepseek.v3.2"
+    BEDROCK_FAST_MODEL_ID: str = "zai.glm-4.7-flash"
+    BEDROCK_API_KEY: Optional[str] = None
+    BEDROCK_MANTLE_ENDPOINT: str = "https://bedrock-mantle.eu-north-1.api.aws"
 
     # CORS
     CORS_ORIGINS: List[str] = Field(default=["http://localhost:3000", "http://127.0.0.1:3000"])
