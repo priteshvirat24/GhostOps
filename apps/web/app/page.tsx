@@ -1,311 +1,165 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
-import Navbar from '../components/Navbar';
-import StatusCard from '../components/StatusCard';
-import IncidentList from '../components/IncidentList';
-import MemoryStats from '../components/MemoryStats';
-import IncidentDetailModal from '../components/IncidentDetailModal';
-import AgentInvestigationSection from '../components/AgentInvestigationSection';
-import AgentTraceSection from '../components/AgentTraceSection';
-import HistoricalMemorySection from '../components/HistoricalMemorySection';
-import RemediationGovernanceSection from '../components/RemediationGovernanceSection';
-import SagaExecutionSection from '../components/SagaExecutionSection';
-import GhostReplaySection from '../components/GhostReplaySection';
-import LearningConsolidationSection from '../components/LearningConsolidationSection';
-import SentinelControlSection from '../components/SentinelControlSection';
-import EvaluationSection from '../components/EvaluationSection';
+import React, { useState, useEffect, useRef } from 'react';
+import ExperienceNav from '../components/cinematic/ExperienceNav';
+import ChamberHero from '../components/cinematic/ChamberHero';
+import ChamberLiveIngestion from '../components/cinematic/ChamberLiveIngestion';
+import ChamberNeuralMemory from '../components/cinematic/ChamberNeuralMemory';
+import ChamberMultiTierReasoning from '../components/cinematic/ChamberMultiTierReasoning';
+import ChamberTemporalDrift from '../components/cinematic/ChamberTemporalDrift';
+import ChamberGovernedRemediation from '../components/cinematic/ChamberGovernedRemediation';
+import ChamberTelemetryVerification from '../components/cinematic/ChamberTelemetryVerification';
+import ChamberLearningCDC from '../components/cinematic/ChamberLearningCDC';
+import ChamberCounterfactualReplay from '../components/cinematic/ChamberCounterfactualReplay';
+import ChamberLiveDemoModal from '../components/cinematic/ChamberLiveDemoModal';
+import { getHealth } from '../lib/api';
+import { SystemHealth } from '../types';
+import { NodePoint } from '../lib/3d-math';
 
-import { fetchSystemHealth, fetchIncidents, fetchAgentTraces, fetchRemediationPlans, fetchIncidentDetail } from '../lib/api';
-import { SystemHealth, Incident, AgentTrace, RemediationPlan, IncidentDetail } from '../types';
-import { AlertCircle, Brain, ShieldCheck, GitBranch, Cpu, Award, Zap, History, RefreshCw } from 'lucide-react';
-
-type TabType = 'dashboard' | 'investigation' | 'trace' | 'memory' | 'remediation' | 'replay' | 'sentinel' | 'evaluation';
-
-export default function Dashboard() {
-  const [activeTab, setActiveTab] = useState<TabType>('dashboard');
+export default function GhostOpsExperience() {
   const [health, setHealth] = useState<SystemHealth | null>(null);
-  const [incidents, setIncidents] = useState<Incident[]>([]);
-  const [traces, setTraces] = useState<AgentTrace[]>([]);
-  const [plans, setPlans] = useState<RemediationPlan[]>([]);
-  const [selectedIncident, setSelectedIncident] = useState<IncidentDetail | null>(null);
-  const [loading, setLoading] = useState<boolean>(true);
+  const [activeChamber, setActiveChamber] = useState<number>(0);
+  const [isDemoModalOpen, setIsDemoModalOpen] = useState<boolean>(false);
+  const [selectedNode, setSelectedNode] = useState<NodePoint | null>(null);
 
-  const loadDashboardData = async () => {
-    setLoading(true);
-    try {
-      const [healthData, incidentData, traceData, planData] = await Promise.all([
-        fetchSystemHealth(),
-        fetchIncidents(),
-        fetchAgentTraces(),
-        fetchRemediationPlans(),
-      ]);
-      setHealth(healthData);
-      setIncidents(incidentData);
-      setTraces(traceData);
-      setPlans(planData);
-    } catch (e) {
-      console.error('Failed to fetch dashboard data:', e);
-    } finally {
-      setLoading(false);
-    }
-  };
+  // Section references for scroll navigation
+  const chamberRefs = [
+    useRef<HTMLDivElement>(null), // 0: Hero Vault
+    useRef<HTMLDivElement>(null), // 1: Ingestion
+    useRef<HTMLDivElement>(null), // 2: Neural Memory
+    useRef<HTMLDivElement>(null), // 3: Reasoning
+    useRef<HTMLDivElement>(null), // 4: Temporal Drift
+    useRef<HTMLDivElement>(null), // 5: Governed Saga
+    useRef<HTMLDivElement>(null), // 6: Verification
+    useRef<HTMLDivElement>(null), // 7: CDC Learning
+    useRef<HTMLDivElement>(null), // 8: Benchmark
+  ];
 
+  // Fetch real backend system health
   useEffect(() => {
-    loadDashboardData();
-    const interval = setInterval(loadDashboardData, 12000);
+    const fetchHealth = async () => {
+      try {
+        const data = await getHealth();
+        setHealth(data);
+      } catch (e) {
+        console.error('Failed to fetch backend health:', e);
+      }
+    };
+    fetchHealth();
+    const interval = setInterval(fetchHealth, 10000);
     return () => clearInterval(interval);
   }, []);
 
-  const handleSelectIncident = async (incidentId: string) => {
-    const detail = await fetchIncidentDetail(incidentId);
-    if (detail) {
-      setSelectedIncident(detail);
+  // Track active section on scroll
+  useEffect(() => {
+    const handleScroll = () => {
+      const scrollPos = window.scrollY + 200;
+      chamberRefs.forEach((ref, idx) => {
+        if (ref.current) {
+          const top = ref.current.offsetTop;
+          const height = ref.current.offsetHeight;
+          if (scrollPos >= top && scrollPos < top + height) {
+            setActiveChamber(idx);
+          }
+        }
+      });
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  const scrollToChamber = (index: number) => {
+    setActiveChamber(index);
+    const targetRef = chamberRefs[index];
+    if (targetRef && targetRef.current) {
+      targetRef.current.scrollIntoView({ behavior: 'smooth' });
     }
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#0B0F19] text-gray-100 font-sans selection:bg-purple-500/30">
-      <Navbar health={health} />
+    <main className="min-h-screen bg-[#07090e] text-[#f5f6f0] selection:bg-emerald-500/30 selection:text-white relative">
+      {/* Top Research Instrument Navigation Bar */}
+      <ExperienceNav
+        health={health}
+        activeChamber={activeChamber}
+        onSelectChamber={scrollToChamber}
+        onOpenDemo={() => setIsDemoModalOpen(true)}
+      />
 
-      {/* Navigation Sub-Header Bar */}
-      <div className="glass-panel sticky top-[73px] z-40 px-6 py-2.5 border-b border-gray-800 bg-[#0B0F19]/90 backdrop-blur-md">
-        <div className="max-w-7xl mx-auto flex items-center justify-between overflow-x-auto gap-2">
-          <div className="flex items-center space-x-1.5 min-w-max">
-            <button
-              onClick={() => setActiveTab('dashboard')}
-              className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold transition flex items-center space-x-1.5 ${
-                activeTab === 'dashboard'
-                  ? 'bg-purple-600/30 text-purple-300 border border-purple-500/40 shadow-sm'
-                  : 'text-gray-400 hover:text-gray-200 hover:bg-gray-850'
-              }`}
-            >
-              <AlertCircle className="w-3.5 h-3.5" />
-              <span>Overview</span>
-            </button>
-
-            <button
-              onClick={() => setActiveTab('investigation')}
-              className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold transition flex items-center space-x-1.5 ${
-                activeTab === 'investigation'
-                  ? 'bg-cyan-600/30 text-cyan-300 border border-cyan-500/40 shadow-sm'
-                  : 'text-gray-400 hover:text-gray-200 hover:bg-gray-850'
-              }`}
-            >
-              <GitBranch className="w-3.5 h-3.5" />
-              <span>Investigation Graph</span>
-            </button>
-
-            <button
-              onClick={() => setActiveTab('trace')}
-              className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold transition flex items-center space-x-1.5 ${
-                activeTab === 'trace'
-                  ? 'bg-cyan-950 text-cyan-300 border border-cyan-500/50 shadow-sm'
-                  : 'text-gray-400 hover:text-gray-200 hover:bg-gray-850'
-              }`}
-            >
-              <Cpu className="w-3.5 h-3.5 text-cyan-400" />
-              <span>Agent Trace (ReAct)</span>
-            </button>
-
-            <button
-              onClick={() => setActiveTab('memory')}
-              className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold transition flex items-center space-x-1.5 ${
-                activeTab === 'memory'
-                  ? 'bg-purple-600/30 text-purple-300 border border-purple-500/40 shadow-sm'
-                  : 'text-gray-400 hover:text-gray-200 hover:bg-gray-850'
-              }`}
-            >
-              <Brain className="w-3.5 h-3.5" />
-              <span>Memory Graph & CDC</span>
-            </button>
-
-            <button
-              onClick={() => setActiveTab('remediation')}
-              className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold transition flex items-center space-x-1.5 ${
-                activeTab === 'remediation'
-                  ? 'bg-emerald-600/30 text-emerald-300 border border-emerald-500/40 shadow-sm'
-                  : 'text-gray-400 hover:text-gray-200 hover:bg-gray-850'
-              }`}
-            >
-              <ShieldCheck className="w-3.5 h-3.5" />
-              <span>Saga Remediation</span>
-            </button>
-
-            <button
-              onClick={() => setActiveTab('replay')}
-              className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold transition flex items-center space-x-1.5 ${
-                activeTab === 'replay'
-                  ? 'bg-amber-600/30 text-amber-300 border border-amber-500/40 shadow-sm'
-                  : 'text-gray-400 hover:text-gray-200 hover:bg-gray-850'
-              }`}
-            >
-              <History className="w-3.5 h-3.5" />
-              <span>Ghost Replay</span>
-            </button>
-
-            <button
-              onClick={() => setActiveTab('sentinel')}
-              className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold transition flex items-center space-x-1.5 ${
-                activeTab === 'sentinel'
-                  ? 'bg-rose-600/30 text-rose-300 border border-rose-500/40 shadow-sm'
-                  : 'text-gray-400 hover:text-gray-200 hover:bg-gray-850'
-              }`}
-            >
-              <Zap className="w-3.5 h-3.5" />
-              <span>Sentinel Monitor</span>
-            </button>
-
-            <button
-              onClick={() => setActiveTab('evaluation')}
-              className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold transition flex items-center space-x-1.5 ${
-                activeTab === 'evaluation'
-                  ? 'bg-emerald-950 text-emerald-300 border border-emerald-500/50 shadow-sm'
-                  : 'text-gray-400 hover:text-gray-200 hover:bg-gray-850'
-              }`}
-            >
-              <Award className="w-3.5 h-3.5 text-emerald-400" />
-              <span>Evaluation & Sandbox</span>
-            </button>
-          </div>
-
-          <button
-            onClick={loadDashboardData}
-            className="p-1.5 hover:bg-gray-800 rounded-lg text-gray-400 hover:text-gray-200 transition"
-            title="Reload telemetry data"
-          >
-            <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
-          </button>
-        </div>
+      {/* Chamber 01: Hero Living Memory Vault */}
+      <div ref={chamberRefs[0]}>
+        <ChamberHero
+          onOpenDemo={() => setIsDemoModalOpen(true)}
+          onExploreMemory={() => scrollToChamber(2)}
+          onExploreBenchmark={() => scrollToChamber(8)}
+          onSelectNode={(node) => setSelectedNode(node)}
+        />
       </div>
 
-      <main className="flex-1 p-6 space-y-6 max-w-7xl mx-auto w-full">
-        {/* TAB 1: OVERVIEW DASHBOARD */}
-        {activeTab === 'dashboard' && (
-          <div className="space-y-6">
-            {/* Metric Cards Row */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-              <StatusCard
-                title="Active Incidents"
-                value={incidents.length}
-                subtitle="Raw telemetry isolated"
-                icon={AlertCircle}
-                color="rose"
-              />
-              <StatusCard
-                title="CockroachDB Vector Memory"
-                value="CSPANN Live"
-                subtitle="1536-dim unified SQL query"
-                icon={Brain}
-                color="purple"
-              />
-              <StatusCard
-                title="Governed Sagas"
-                value={plans.length}
-                subtitle="L0-L5 Risk & Rollbacks"
-                icon={ShieldCheck}
-                color="emerald"
-              />
-              <StatusCard
-                title="Active ReAct Traces"
-                value={traces.length}
-                subtitle="Multi-agent isolated graph"
-                icon={GitBranch}
-                color="cyan"
-              />
-            </div>
+      {/* Chamber 02: Production Signal Ingestion & Evidence Chain */}
+      <div ref={chamberRefs[1]} className="border-t border-zinc-900 bg-gradient-to-b from-[#07090e] to-[#0c1017]">
+        <ChamberLiveIngestion />
+      </div>
 
-            {/* Core Dashboard Content Grid */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              <div className="lg:col-span-2 space-y-6">
-                <IncidentList incidents={incidents} onSelectIncident={handleSelectIncident} />
-              </div>
+      {/* Chamber 03: Living Neural Memory & Native Vector Retrieval */}
+      <div ref={chamberRefs[2]} className="border-t border-zinc-900 bg-[#07090e]">
+        <ChamberNeuralMemory />
+      </div>
 
-              <div className="space-y-6">
-                <MemoryStats />
+      {/* Chamber 04: Multi-Tier Model Reasoning & Competing Hypotheses */}
+      <div ref={chamberRefs[3]} className="border-t border-zinc-900 bg-gradient-to-b from-[#07090e] to-[#0c1017]">
+        <ChamberMultiTierReasoning />
+      </div>
 
-                {/* PRD v3.0 Compliance Card */}
-                <div className="glass-panel p-6 rounded-2xl border border-gray-800 space-y-3 bg-gradient-to-br from-[#0c1424] to-[#0B0F19]">
-                  <h3 className="text-xs font-bold text-gray-200 uppercase tracking-wider flex items-center justify-between">
-                    <span>CockroachDB × AWS Hackathon</span>
-                    <span className="text-emerald-400 font-mono">v3.0 Target</span>
-                  </h3>
-                  <p className="text-xs text-gray-400">
-                    All 4 CockroachDB tools and load-bearing AWS services are meaningfully integrated.
-                  </p>
-                  <div className="space-y-2 text-xs font-mono text-gray-400 pt-1">
-                    <div className="flex items-center space-x-2 text-emerald-400 font-semibold">
-                      <span>✓ CockroachDB Managed MCP Server:</span>
-                      <span className="text-gray-300">Live Read/Write Tool Surface</span>
-                    </div>
-                    <div className="flex items-center space-x-2 text-emerald-400 font-semibold">
-                      <span>✓ CockroachDB VECTOR + CSPANN:</span>
-                      <span className="text-gray-300">Unified Relational + Vector</span>
-                    </div>
-                    <div className="flex items-center space-x-2 text-emerald-400 font-semibold">
-                      <span>✓ ccloud CLI Agent Sandbox:</span>
-                      <span className="text-gray-300">Ephemeral Cluster Dry-Run</span>
-                    </div>
-                    <div className="flex items-center space-x-2 text-emerald-400 font-semibold">
-                      <span>✓ Multi-Tier Bedrock Inference:</span>
-                      <span className="text-gray-300">Fast & Reasoning Tiers</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
+      {/* Chamber 05: Deterministic Temporal Drift Engine (Flagship Incident #1847) */}
+      <div ref={chamberRefs[4]} className="border-t border-zinc-900 bg-[#07090e]">
+        <ChamberTemporalDrift />
+      </div>
+
+      {/* Chamber 06: Governed Remediation & 2-Phase Commit Saga */}
+      <div ref={chamberRefs[5]} className="border-t border-zinc-900 bg-gradient-to-b from-[#07090e] to-[#0c1017]">
+        <ChamberGovernedRemediation />
+      </div>
+
+      {/* Chamber 07: Independent Telemetry Verification */}
+      <div ref={chamberRefs[6]} className="border-t border-zinc-900 bg-[#07090e]">
+        <ChamberTelemetryVerification />
+      </div>
+
+      {/* Chamber 08: Post-Remediation Learning & CockroachDB CDC */}
+      <div ref={chamberRefs[7]} className="border-t border-zinc-900 bg-gradient-to-b from-[#07090e] to-[#0c1017]">
+        <ChamberLearningCDC />
+      </div>
+
+      {/* Chamber 09: Counterfactual Replay & Regression Benchmark Suite */}
+      <div ref={chamberRefs[8]} className="border-t border-zinc-900 bg-[#07090e]">
+        <ChamberCounterfactualReplay />
+      </div>
+
+      {/* Interactive 3-Minute Live Incident Simulation Modal */}
+      <ChamberLiveDemoModal
+        isOpen={isDemoModalOpen}
+        onClose={() => setIsDemoModalOpen(false)}
+      />
+
+      {/* Global Cinematic Footer */}
+      <footer className="py-12 px-6 border-t border-zinc-900 bg-zinc-950 text-center font-mono text-xs text-zinc-500">
+        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="flex items-center gap-2">
+            <span className="text-emerald-400 font-bold">GHOSTOPS</span>
+            <span>·</span>
+            <span>SYSTEM OF RECORD & AUTONOMOUS REASONING ENGINE</span>
           </div>
-        )}
-
-        {/* TAB 2: AGENT INVESTIGATION GRAPH */}
-        {activeTab === 'investigation' && (
-          <AgentInvestigationSection incidentId={incidents[0]?.id} />
-        )}
-
-        {/* TAB 3: AGENT TRACE (ReAct) */}
-        {activeTab === 'trace' && (
-          <AgentTraceSection traces={traces} onRefresh={loadDashboardData} />
-        )}
-
-        {/* TAB 4: MEMORY GRAPH & CDC */}
-        {activeTab === 'memory' && (
-          <div className="space-y-6">
-            <HistoricalMemorySection incidentId={incidents[0]?.id} />
-            <LearningConsolidationSection incidentId={incidents[0]?.id} />
+          <div className="flex items-center gap-4 text-zinc-400">
+            <span>CockroachDB Cloud Serverless</span>
+            <span>·</span>
+            <span>Amazon Bedrock Mantle</span>
+            <span>·</span>
+            <span>1536-Dim Native Vector</span>
           </div>
-        )}
-
-        {/* TAB 5: SAGA REMEDIATION & GOVERNANCE */}
-        {activeTab === 'remediation' && (
-          <div className="space-y-6">
-            <RemediationGovernanceSection incidentId={incidents[0]?.id} />
-            <SagaExecutionSection incidentId={incidents[0]?.id} />
-          </div>
-        )}
-
-        {/* TAB 6: GHOST REPLAY */}
-        {activeTab === 'replay' && (
-          <GhostReplaySection incidentId={incidents[0]?.id} />
-        )}
-
-        {/* TAB 7: SENTINEL AUTONOMOUS MONITOR */}
-        {activeTab === 'sentinel' && (
-          <SentinelControlSection />
-        )}
-
-        {/* TAB 8: EVALUATION & CCLOUD SANDBOX */}
-        {activeTab === 'evaluation' && (
-          <EvaluationSection />
-        )}
-      </main>
-
-      {/* Incident Detail Modal */}
-      {selectedIncident && (
-        <IncidentDetailModal
-          incident={selectedIncident}
-          onClose={() => setSelectedIncident(null)}
-        />
-      )}
-    </div>
+        </div>
+      </footer>
+    </main>
   );
 }
