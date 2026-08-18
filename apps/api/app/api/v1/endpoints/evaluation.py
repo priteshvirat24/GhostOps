@@ -24,12 +24,14 @@ class CDCEventRequest(BaseModel):
     mode: str = "TEST_EVENT_MODE"
 
 class EvaluationRunRequest(BaseModel):
-    dataset_version: str = "ghostops-golden-v1"
+    dataset_version: Optional[str] = "ghostops-golden-v2"
+    split: Optional[str] = None
 
 @router.post("/evaluation/benchmark")
 @router.post("/evaluation/run")
 def run_evaluation_benchmark(
     request: Optional[EvaluationRunRequest] = None,
+    split: Optional[str] = Query(None),
     db: Session = Depends(get_db)
 ):
     """
@@ -37,8 +39,9 @@ def run_evaluation_benchmark(
     Evaluates real hybrid retrieval, investigator evidence grounding, temporal reasoning, and safety regression gates.
     Persists evaluation results in CockroachDB.
     """
-    dataset_ver = request.dataset_version if request else "ghostops-golden-v1"
-    result = AgentEvaluationHarness.run_benchmark(db, dataset_version=dataset_ver)
+    dataset_ver = (request.dataset_version if request and request.dataset_version else "ghostops-golden-v2")
+    split_val = split or (request.split if request else None)
+    result = AgentEvaluationHarness.run_benchmark(db, dataset_version=dataset_ver, split=split_val)
     return result
 
 @router.get("/evaluation/runs")

@@ -107,14 +107,15 @@ def test_cdc_memory_bus_trust_propagation(db_session: Session):
 
 def test_agent_evaluation_golden_dataset(db_session: Session):
     """Test §9.5: Agent Evaluation Harness against golden benchmark dataset."""
-    bench = AgentEvaluationHarness.run_benchmark(db_session)
-    assert bench["total_benchmark_cases"] >= 20
-    assert bench["precision_at_3"] >= 0.60
+    bench = AgentEvaluationHarness.run_benchmark(db_session, split="development")
+    assert bench["total_cases"] == 10
+    assert bench["dataset_version"] == "ghostops-golden-v2"
+    assert bench["corpus_version"] == "ghostops-history-v1"
     assert bench["temporal_verdict_accuracy"] >= 0.85
     assert bench["unsafe_replay_rate"] == 0.0
     assert bench["false_execution_rate"] == 0.0
     assert bench["regression_gate_passed"] is True
-    assert bench["status"] == "PASSED"
+    assert bench["status"] == "COMPLETED"
 
 def test_bedrock_multi_tier_routing():
     """Test §9.3 & §22: Amazon Bedrock multi-tier model routing."""

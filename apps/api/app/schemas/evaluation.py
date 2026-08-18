@@ -14,6 +14,8 @@ class EvaluationCaseContract(BaseModel):
     benchmark_id: str
     incident_id: str
     case_category: str  # applicable_success | obsolete_drift | historical_failure | contradictory_evidence | low_confidence | negative_memory | adversarial_injection
+    dataset_split: str = "development" # development | validation | holdout
+    corpus_version: str = "ghostops-history-v1"
     service: str
     region: str = "us-east-1"
     symptom: str

@@ -1,18 +1,18 @@
 import React, { useState, useEffect } from 'react';
-import { Award, CheckCircle2, Play, AlertOctagon, Database, Cpu, Terminal, ShieldAlert, Sparkles, RefreshCw, XCircle, ChevronDown, ChevronUp } from 'lucide-react';
+import { Award, CheckCircle2, Play, AlertOctagon, Database, Cpu, Terminal, ShieldAlert, Sparkles, RefreshCw, XCircle, ChevronDown, ChevronUp, History, Filter } from 'lucide-react';
 
 export default function EvaluationSection() {
   const [runningBenchmark, setRunningBenchmark] = useState<boolean>(false);
   const [benchmarkResult, setBenchmarkResult] = useState<any>(null);
   const [evaluationRuns, setEvaluationRuns] = useState<any[]>([]);
   const [selectedRunId, setSelectedRunId] = useState<string | null>(null);
+  const [selectedSplit, setSelectedSplit] = useState<string>("all");
   const [showCaseDetails, setShowCaseDetails] = useState<boolean>(true);
   const [sandboxCommand, setSandboxCommand] = useState<string>("reset_leaseholder --cluster=crdb-prod --nodes=5");
   const [schemaVersion, setSchemaVersion] = useState<string>("v26.0.0");
   const [runningSandbox, setRunningSandbox] = useState<boolean>(false);
   const [sandboxResult, setSandboxResult] = useState<any>(null);
 
-  // Load existing runs on mount
   useEffect(() => {
     fetchLatestRuns();
   }, []);
@@ -23,7 +23,7 @@ export default function EvaluationSection() {
       if (res.ok) {
         const runs = await res.json();
         setEvaluationRuns(runs);
-        if (runs.length > 0) {
+        if (runs.length > 0 && !selectedRunId) {
           fetchRunDetails(runs[0].id);
         }
       }
@@ -45,12 +45,14 @@ export default function EvaluationSection() {
     }
   };
 
-  const runEvaluation = async () => {
+  const runEvaluation = async (splitParam?: string) => {
     setRunningBenchmark(true);
+    const targetSplit = splitParam || (selectedSplit === "all" ? undefined : selectedSplit);
     try {
-      const res = await fetch('http://localhost:8000/api/v1/evaluation/benchmark', {
-        method: 'POST'
-      });
+      const url = targetSplit 
+        ? `http://localhost:8000/api/v1/evaluation/benchmark?split=${targetSplit}`
+        : `http://localhost:8000/api/v1/evaluation/benchmark`;
+      const res = await fetch(url, { method: 'POST' });
       if (res.ok) {
         const data = await res.json();
         setBenchmarkResult(data);
@@ -103,23 +105,54 @@ export default function EvaluationSection() {
             <h2 className="text-xl font-bold text-gray-100 flex items-center gap-2">
               Counterfactual Replay & Regression Evaluation Harness
               <span className="px-2.5 py-0.5 rounded-full text-xs font-mono bg-emerald-950/80 border border-emerald-500/30 text-emerald-300">
-                {benchmarkResult?.dataset_version || "ghostops-golden-v1"}
+                {benchmarkResult?.dataset_version || "ghostops-golden-v2"}
+              </span>
+              <span className="px-2.5 py-0.5 rounded-full text-xs font-mono bg-cyan-950/80 border border-cyan-500/30 text-cyan-300">
+                {benchmarkResult?.corpus_version || "ghostops-history-v1"}
               </span>
             </h2>
           </div>
           <p className="text-xs text-gray-400">
-            Executes full counterfactual replay pipeline across versioned golden incidents: Hybrid Vector Retrieval, Model-Driven Investigation, Temporal Drift Reasoning, and Deterministic Safety Regression Gates.
+            Executes read-only counterfactual replay pipeline across 30 golden incidents against independent historical memory (46 records): Hybrid Vector Retrieval, Model-Driven Investigation, Temporal Drift Reasoning, and Deterministic Safety Regression Gates.
           </p>
         </div>
 
-        <div className="flex items-center space-x-3">
+        <div className="flex flex-col sm:flex-row items-end sm:items-center gap-3">
+          {/* Split Selector Tabs */}
+          <div className="flex items-center bg-gray-900/80 p-1 rounded-xl border border-gray-800 text-xs font-mono">
+            <button
+              onClick={() => { setSelectedSplit("all"); runEvaluation("all"); }}
+              className={`px-3 py-1.5 rounded-lg transition ${selectedSplit === "all" ? "bg-emerald-600 text-white font-bold" : "text-gray-400 hover:text-gray-200"}`}
+            >
+              All (30)
+            </button>
+            <button
+              onClick={() => { setSelectedSplit("development"); runEvaluation("development"); }}
+              className={`px-3 py-1.5 rounded-lg transition ${selectedSplit === "development" ? "bg-emerald-600 text-white font-bold" : "text-gray-400 hover:text-gray-200"}`}
+            >
+              Dev (10)
+            </button>
+            <button
+              onClick={() => { setSelectedSplit("validation"); runEvaluation("validation"); }}
+              className={`px-3 py-1.5 rounded-lg transition ${selectedSplit === "validation" ? "bg-emerald-600 text-white font-bold" : "text-gray-400 hover:text-gray-200"}`}
+            >
+              Val (10)
+            </button>
+            <button
+              onClick={() => { setSelectedSplit("holdout"); runEvaluation("holdout"); }}
+              className={`px-3 py-1.5 rounded-lg transition ${selectedSplit === "holdout" ? "bg-emerald-600 text-white font-bold" : "text-gray-400 hover:text-gray-200"}`}
+            >
+              Holdout (10)
+            </button>
+          </div>
+
           <button
-            onClick={runEvaluation}
+            onClick={() => runEvaluation()}
             disabled={runningBenchmark}
             className="flex items-center space-x-2 px-4 py-2 bg-gradient-to-r from-emerald-600 to-cyan-600 hover:from-emerald-500 hover:to-cyan-500 text-white rounded-xl text-xs font-bold transition shadow-lg shadow-emerald-950/30 disabled:opacity-50"
           >
             {runningBenchmark ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Play className="w-3.5 h-3.5" />}
-            <span>Run Golden Benchmark ({benchmarkResult?.total_benchmark_cases || benchmarkResult?.total_cases || 26} Cases)</span>
+            <span>Run Benchmark ({benchmarkResult?.total_cases || 10} Cases)</span>
           </button>
         </div>
       </div>
@@ -130,18 +163,20 @@ export default function EvaluationSection() {
           <div className="flex items-center justify-between border-b border-gray-800 pb-3">
             <h3 className="text-sm font-bold text-gray-100 flex items-center gap-2">
               <Sparkles className="w-4 h-4 text-emerald-400" />
-              <span>Live Replay Metrics ({benchmarkResult?.dataset_version || "ghostops-golden-v1"})</span>
+              <span>Contamination-Free Replay Metrics ({benchmarkResult?.dataset_version || "ghostops-golden-v2"})</span>
             </h3>
             <span className={`text-xs font-mono px-2 py-0.5 rounded border ${
               benchmarkResult?.regression_gate_passed
                 ? 'bg-emerald-950 border-emerald-500/40 text-emerald-300'
+                : benchmarkResult?.status === 'INVALIDATED_CONTAMINATED_BENCHMARK'
+                ? 'bg-rose-950 border-rose-500/40 text-rose-300'
                 : 'bg-amber-950 border-amber-500/40 text-amber-300'
             }`}>
               {benchmarkResult?.status || "READY"}
             </span>
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-3 gap-3">
             <div className="p-3.5 rounded-xl bg-gray-900/60 border border-gray-800/80">
               <span className="text-[11px] text-gray-400 font-mono">Precision @ 1</span>
               <p className="text-xl font-bold font-mono text-emerald-400 mt-1">
@@ -155,6 +190,12 @@ export default function EvaluationSection() {
               </p>
             </div>
             <div className="p-3.5 rounded-xl bg-gray-900/60 border border-gray-800/80">
+              <span className="text-[11px] text-gray-400 font-mono">MRR</span>
+              <p className="text-xl font-bold font-mono text-teal-400 mt-1">
+                {benchmarkResult ? `${(benchmarkResult.mrr || 0).toFixed(4)}` : '--'}
+              </p>
+            </div>
+            <div className="p-3.5 rounded-xl bg-gray-900/60 border border-gray-800/80">
               <span className="text-[11px] text-gray-400 font-mono">Temporal Accuracy</span>
               <p className="text-xl font-bold font-mono text-purple-400 mt-1">
                 {benchmarkResult ? `${(benchmarkResult.temporal_verdict_accuracy * 100).toFixed(1)}%` : '--'}
@@ -163,19 +204,13 @@ export default function EvaluationSection() {
             <div className="p-3.5 rounded-xl bg-gray-900/60 border border-gray-800/80">
               <span className="text-[11px] text-gray-400 font-mono">Evidence Grounding</span>
               <p className="text-xl font-bold font-mono text-amber-400 mt-1">
-                {benchmarkResult ? `${((benchmarkResult.evidence_grounding_score || benchmarkResult.evidence_faithfulness_score || 0) * 100).toFixed(1)}%` : '--'}
+                {benchmarkResult ? `${((benchmarkResult.evidence_grounding_score || 0) * 100).toFixed(1)}%` : '--'}
               </p>
             </div>
             <div className="p-3.5 rounded-xl bg-gray-900/60 border border-gray-800/80">
               <span className="text-[11px] text-gray-400 font-mono">Unsafe Replay Rate</span>
               <p className="text-xl font-bold font-mono text-emerald-400 mt-1">
                 {benchmarkResult ? `${(benchmarkResult.unsafe_replay_rate * 100).toFixed(2)}%` : '0.00%'}
-              </p>
-            </div>
-            <div className="p-3.5 rounded-xl bg-gray-900/60 border border-gray-800/80">
-              <span className="text-[11px] text-gray-400 font-mono">False Execution Rate</span>
-              <p className="text-xl font-bold font-mono text-emerald-400 mt-1">
-                {benchmarkResult ? `${(benchmarkResult.false_execution_rate * 100).toFixed(2)}%` : '0.00%'}
               </p>
             </div>
           </div>
@@ -193,7 +228,7 @@ export default function EvaluationSection() {
               )}
               <div>
                 <p className="text-xs font-bold text-gray-200">
-                  {benchmarkResult?.regression_gate_passed ? "Regression Gate Passed" : "Regression Gate Status"}
+                  {benchmarkResult?.regression_gate_passed ? "Deterministic Regression Gate: PASSED" : "Regression Gate Status"}
                 </p>
                 <p className="text-[10px] text-gray-400 font-mono">
                   {benchmarkResult?.summary || "Deterministic safety floors: 0% unsafe replays, 0% false execution."}
@@ -205,7 +240,7 @@ export default function EvaluationSection() {
                 ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40'
                 : 'bg-rose-500/20 text-rose-300 border-rose-500/40'
             }`}>
-              {benchmarkResult?.regression_gate_passed ? 'GATE OK' : 'REGRESSION'}
+              {benchmarkResult?.regression_gate_passed ? 'GATE PASSED' : 'REGRESSION'}
             </span>
           </div>
         </div>
@@ -218,58 +253,54 @@ export default function EvaluationSection() {
               <span>CockroachDB ccloud Ephemeral Sandbox (§13, §19.4)</span>
             </h3>
             <span className="text-xs font-mono px-2 py-0.5 rounded bg-cyan-950 border border-cyan-800 text-cyan-300">
-              ccloud CLI Ready
+              ISOLATED SANDBOX
             </span>
           </div>
 
           <div className="space-y-3">
             <div>
-              <label className="text-xs font-mono text-gray-400 block mb-1">Target Remediation Command</label>
+              <label className="text-[11px] font-mono text-gray-400 block mb-1">Target Command</label>
               <input
                 type="text"
                 value={sandboxCommand}
                 onChange={(e) => setSandboxCommand(e.target.value)}
-                className="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2 text-xs font-mono text-gray-200 focus:outline-none focus:border-cyan-500"
+                className="w-full bg-gray-900 border border-gray-800 rounded-xl px-3 py-2 text-xs font-mono text-gray-200 focus:outline-none focus:border-cyan-500"
               />
             </div>
 
-            <div>
-              <label className="text-xs font-mono text-gray-400 block mb-1">Target Cluster Schema / Engine Version</label>
-              <select
-                value={schemaVersion}
-                onChange={(e) => setSchemaVersion(e.target.value)}
-                className="w-full bg-gray-900 border border-gray-700 rounded-xl px-3 py-2 text-xs font-mono text-gray-200 focus:outline-none focus:border-cyan-500"
-              >
-                <option value="v24.1.0">CockroachDB v24.1.0 (Historical 3-Region Baseline)</option>
-                <option value="v26.0.0">CockroachDB v26.0.0 (Current 5-Region Topology - Reject Unsafe)</option>
-              </select>
-            </div>
+            <div className="flex items-center gap-3">
+              <div className="flex-1">
+                <label className="text-[11px] font-mono text-gray-400 block mb-1">Schema Version Target</label>
+                <input
+                  type="text"
+                  value={schemaVersion}
+                  onChange={(e) => setSchemaVersion(e.target.value)}
+                  className="w-full bg-gray-900 border border-gray-800 rounded-xl px-3 py-2 text-xs font-mono text-gray-200 focus:outline-none focus:border-cyan-500"
+                />
+              </div>
 
-            <button
-              onClick={runSandboxDryRun}
-              disabled={runningSandbox}
-              className="w-full py-2.5 bg-gray-900 hover:bg-gray-800 border border-gray-700 rounded-xl text-xs font-bold text-cyan-300 transition flex items-center justify-center space-x-2"
-            >
-              {runningSandbox ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Terminal className="w-3.5 h-3.5" />}
-              <span>Provision ccloud Sandbox & Dry-Run</span>
-            </button>
+              <button
+                onClick={runSandboxDryRun}
+                disabled={runningSandbox}
+                className="mt-5 px-4 py-2 bg-cyan-600 hover:bg-cyan-500 text-white rounded-xl text-xs font-mono font-bold transition disabled:opacity-50"
+              >
+                {runningSandbox ? "Simulating..." : "Execute Dry Run"}
+              </button>
+            </div>
           </div>
 
           {sandboxResult && (
             <div className={`p-4 rounded-xl border space-y-2 ${
-              sandboxResult.dry_run_success
-                ? 'bg-emerald-950/20 border-emerald-500/30'
-                : 'bg-rose-950/20 border-rose-500/30'
+              sandboxResult.dry_run_success ? 'bg-emerald-950/20 border-emerald-500/30' : 'bg-rose-950/20 border-rose-500/30'
             }`}>
               <div className="flex items-center justify-between">
-                <span className={`text-xs font-bold font-mono ${
-                  sandboxResult.dry_run_success ? 'text-emerald-300' : 'text-rose-400'
-                }`}>
-                  Signal: {sandboxResult.verification_signal}
+                <span className="text-xs font-bold text-gray-200 flex items-center gap-1.5 font-mono">
+                  {sandboxResult.dry_run_success ? <CheckCircle2 className="w-4 h-4 text-emerald-400" /> : <AlertOctagon className="w-4 h-4 text-rose-400" />}
+                  {sandboxResult.verification_signal}
                 </span>
                 <span className="text-[10px] font-mono text-gray-400">{sandboxResult.execution_time_ms}ms</span>
               </div>
-              {sandboxResult.risk_flags.length > 0 && (
+              {sandboxResult.risk_flags && sandboxResult.risk_flags.length > 0 && (
                 <p className="text-xs font-mono text-rose-300">{sandboxResult.risk_flags[0]}</p>
               )}
               <p className="text-[10px] text-gray-400 font-mono">
@@ -304,8 +335,9 @@ export default function EvaluationSection() {
                   <tr className="border-b border-gray-800 text-gray-400">
                     <th className="pb-2">ID</th>
                     <th className="pb-2">Category</th>
-                    <th className="pb-2">Expected Verdict</th>
-                    <th className="pb-2">Actual Verdict</th>
+                    <th className="pb-2">Expected Precedent</th>
+                    <th className="pb-2">Retrieved (Rank / Score)</th>
+                    <th className="pb-2">Temporal Verdict</th>
                     <th className="pb-2">Replay Status</th>
                     <th className="pb-2">Safety Match</th>
                   </tr>
@@ -318,7 +350,10 @@ export default function EvaluationSection() {
                         {c.benchmark_id}
                       </td>
                       <td className="py-2.5 text-gray-400">{c.case_category}</td>
-                      <td className="py-2.5 text-gray-300">{c.expected_temporal_verdict}</td>
+                      <td className="py-2.5 text-gray-300">{c.expected_precedent_id || "None (Novel)"}</td>
+                      <td className="py-2.5 text-cyan-300">
+                        {c.retrieved_precedent_id ? `${c.retrieved_precedent_id} (#${c.retrieval_rank || 1}, ${(c.retrieval_score * 100).toFixed(1)}%)` : "None"}
+                      </td>
                       <td className="py-2.5">
                         <span className={`px-2 py-0.5 rounded text-[10px] ${
                           c.actual_temporal_verdict === "APPLICABLE"
