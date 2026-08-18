@@ -1,0 +1,18 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ghostops-shared"
+version = "0.1.0"
+description = "Shared types, schemas, and enums for GhostOps"
+authors = [{ name = "GhostOps Engineering" }]
+requires-python = ">=3.12"
+dependencies = [
+    "pydantic>=2.0.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0.0",
+]

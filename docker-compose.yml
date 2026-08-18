@@ -1,0 +1,55 @@
+version: '3.8'
+
+services:
+  cockroachdb:
+    image: cockroachdb/cockroach:v24.2.0
+    container_name: ghostops-cockroachdb
+    command: start-single-node --insecure --store=type=mem,size=1GB
+    ports:
+      - "26257:26257"
+      - "8080:8080"
+    volumes:
+      - cockroach_data:/cockroach/cockroach-data
+      - ./infra/cockroach/init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health?ready=1"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  api:
+    build:
+      context: .
+      dockerfile: infra/docker/Dockerfile.api
+    container_name: ghostops-api
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=postgresql+psycopg://root@cockroachdb:26257/ghostops?sslmode=disable
+      - AWS_MOCK_MODE=True
+      - ENVIRONMENT=development
+      - DEBUG=True
+    depends_on:
+      cockroachdb:
+        condition: service_healthy
+    volumes:
+      - ./apps/api:/app/apps/api
+      - ./migrations:/app/migrations
+
+  web:
+    build:
+      context: .
+      dockerfile: infra/docker/Dockerfile.web
+    container_name: ghostops-web
+    ports:
+      - "3000:3000"
+    environment:
+      - NEXT_PUBLIC_API_URL=http://localhost:8000
+    depends_on:
+      - api
+    volumes:
+      - ./apps/web:/app/apps/web
+      - /app/apps/web/node_modules
+
+volumes:
+  cockroach_data:
