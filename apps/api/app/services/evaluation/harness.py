@@ -26,6 +26,7 @@ from app.schemas.evaluation import (
 from app.services.evaluation.golden_dataset import GoldenDatasetRegistry
 from app.services.retrieval import HistoricalRetrievalService
 from app.services.retrieval.vector_retriever import VectorMemoryRetriever
+from app.agents import get_model_provider
 from app.agents.specialists.investigator import InvestigatorAgent
 from app.agents.specialists.temporal import TemporalReasoningAgent
 from app.agents.specialists.planner import RemediationPlannerAgent
@@ -62,8 +63,37 @@ class AgentEvaluationHarness:
         dataset_ver = dataset_version or GoldenDatasetRegistry.DATASET_VERSION
         run_id = f"eval-run-{uuid.uuid4().hex[:12]}"
         now_time = datetime.now(timezone.utc)
+        provider = get_model_provider()
 
         logger.info(f"[AgentEvaluationHarness] Starting benchmark run '{run_id}' on {len(dataset)} cases (version: {dataset_ver})")
+
+        # 0. Seed historical precedent memory vectors with native embeddings in CockroachDB if missing
+        for c in dataset:
+            if c.expected_precedent_id:
+                mem_id = f"mem-{c.expected_precedent_id}"
+                mem_exist = db.get(InstitutionalMemoryVector, mem_id) or db.scalars(
+                    select(InstitutionalMemoryVector).where(
+                        InstitutionalMemoryVector.incident_id == c.expected_precedent_id
+                    )
+                ).first()
+                if not mem_exist:
+                    mem_content = f"{c.incident_title}: {c.incident_description}. Root cause: {c.expected_root_cause}. Remediation: {c.historical_action_taken}"
+                    mem_vec = provider.generate_embedding(mem_content)
+                    new_mem = InstitutionalMemoryVector(
+                        id=mem_id,
+                        incident_id=c.expected_precedent_id,
+                        entity_id=c.service,
+                        title=c.incident_title,
+                        content=mem_content,
+                        redacted_content=mem_content,
+                        memory_type="remediation" if c.historical_result == "SUCCESS" else "negative",
+                        embedding=mem_vec,
+                        trust_level=TrustLevel.HIGH if c.historical_result == "SUCCESS" else TrustLevel.MEDIUM,
+                        created_at=now_time
+                    )
+                    db.add(new_mem)
+                    db.commit()
+        db.commit()
 
         eval_run = EvaluationRun(
             id=run_id,
@@ -128,8 +158,8 @@ class AgentEvaluationHarness:
             db.add(snap)
             db.commit()
 
-            # 2. Real Hybrid Retrieval Evaluation
-            q_vec = [0.05] * 1536
+            # 2. Real Hybrid Retrieval Evaluation with Semantic Query Embedding
+            q_vec = provider.generate_embedding(f"{case.incident_title} {case.incident_description} {case.service}")
             retrieval_res = VectorMemoryRetriever.retrieve_candidates(db, query_vector=q_vec, top_k=5)
             retrieved_precedent_id = None
             retrieval_rank = None
