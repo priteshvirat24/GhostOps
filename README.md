@@ -8,13 +8,14 @@
 [![FastAPI](https://img.shields.io/badge/Backend-FastAPI_0.110+-009688?style=for-the-badge&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
 [![Next.js 14](https://img.shields.io/badge/Frontend-Next.js_14_Three.js-000000?style=for-the-badge&logo=nextdotjs&logoColor=white)](https://nextjs.org/)
 [![Evaluation Benchmark](https://img.shields.io/badge/Golden_Benchmark-93.33%25_P%401_|_0%25_Unsafe-00C853?style=for-the-badge&logo=checkmarx&logoColor=white)](http://51.21.219.177:3000)
+[![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg?style=for-the-badge)](https://github.com/priteshvirat24/GhostOps/blob/main/LICENSE)
 
 <p align="center">
   <strong>Autonomous Institutional Memory & Governed Remediation Engine for Cloud Infrastructure</strong><br>
   Closed-loop intelligence that turns past production outages into governed, verifiable, drift-aware recovery actions.
 </p>
 
-[🌐 Live Production Web](http://51.21.219.177:3000) • [📖 API Swagger Docs](http://51.21.219.177:8000/docs) • [⚡ 2-Min Judge Mode](http://51.21.219.177:3000) • [📦 GitHub Repository](https://github.com/priteshvirat24/GhostOps)
+[🌐 Live Production Web](http://51.21.219.177:3000) • [📖 API Swagger Docs](http://51.21.219.177:8000/docs) • [⚡ 2-Min Judge Mode](http://51.21.219.177:3000) • [📜 License (Apache 2.0)](https://github.com/priteshvirat24/GhostOps/blob/main/LICENSE) • [📦 GitHub Repository](https://github.com/priteshvirat24/GhostOps)
 
 </div>
 
@@ -91,9 +92,9 @@ flowchart TB
         LEARN["Continuous Learning Engine<br/>Vector Consolidation + Trust Update"]
         CDC["CockroachDB CDC Changefeed<br/>Regional Mesh Sync"]
         
-        SAGA -->|Execution Finished| IV
-        IV -->|Recovery Verified (+Trust)| LEARN
-        IV -->|Failed Recovery (-Trust & Negative Knowledge)| LEARN
+        SAGA -->|"Execution Finished"| IV
+        IV -->|"Recovery Verified (+Trust)"| LEARN
+        IV -->|"Failed Recovery (-Trust & Negative Knowledge)"| LEARN
         LEARN --> CDB
         CDB --> CDC --> SENTINEL
     end
