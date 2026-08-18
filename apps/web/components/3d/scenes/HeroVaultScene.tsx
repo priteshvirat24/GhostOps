@@ -2,7 +2,7 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 import * as THREE from 'three';
-import { DEFAULT_NODES, NodePoint, createFacetedGeometry, getNodeColor, PALETTE } from '../../../lib/3d-math';
+import { DEFAULT_NODES, NodePoint, createFacetedGeometry, getNodeColor, PALETTE } from '@/lib/3d-math';
 
 interface HeroVaultSceneProps {
   onSelectNode?: (node: NodePoint) => void;

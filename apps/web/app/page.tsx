@@ -19,7 +19,7 @@ import ChamberLiveDemoModal from '../components/cinematic/ChamberLiveDemoModal';
 import JudgeModeExperience from '../components/cinematic/JudgeModeExperience';
 import { getHealth } from '../lib/api';
 import { SystemHealth } from '../types';
-import { NodePoint } from '../lib/3d-math';
+import { NodePoint } from '@/lib/3d-math';
 
 export default function GhostOpsExperience() {
   const [health, setHealth] = useState<SystemHealth | null>(null);

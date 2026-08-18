@@ -26,7 +26,7 @@ import {
 import HeroVaultScene from '../3d/scenes/HeroVaultScene';
 import TemporalDiffScene from '../3d/scenes/TemporalDiffScene';
 import InvestigationGraphScene from '../3d/scenes/InvestigationGraphScene';
-import { SystemHealth } from '../../types';
+import { SystemHealth } from '@/types';
 
 interface JudgeModeExperienceProps {
   isOpen: boolean;

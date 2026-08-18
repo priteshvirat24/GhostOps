@@ -3,7 +3,7 @@
 import React from 'react';
 import { ArrowRight, Play, Database, Cpu, ShieldCheck, Layers, GitCompare } from 'lucide-react';
 import HeroVaultScene from '../3d/scenes/HeroVaultScene';
-import { NodePoint } from '../../lib/3d-math';
+import { NodePoint } from '@/lib/3d-math';
 
 interface ChamberHeroProps {
   onOpenDemo: () => void;

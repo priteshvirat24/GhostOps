@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Shield, Database, Cpu, Activity, Play, Sparkles, ChevronDown } from 'lucide-react';
-import { SystemHealth } from '../../types';
+import { SystemHealth } from '@/types';
 
 interface ExperienceNavProps {
   health?: SystemHealth | null;

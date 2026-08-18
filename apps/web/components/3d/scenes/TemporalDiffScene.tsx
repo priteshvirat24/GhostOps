@@ -2,7 +2,7 @@
 
 import React, { useEffect, useRef } from 'react';
 import * as THREE from 'three';
-import { PALETTE } from '../../../lib/3d-math';
+import { PALETTE } from '@/lib/3d-math';
 
 interface TemporalDiffSceneProps {
   driftCount?: number;
